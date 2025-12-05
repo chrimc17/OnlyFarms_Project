@@ -1,23 +1,30 @@
 // Gestione dei periodi di lavoro
 let periodCount = 0;
+const STORAGE_KEY = 'onlyfarms_periods';
 
 // Inizializza la pagina
 document.addEventListener('DOMContentLoaded', function() {
     const addPeriodBtn = document.getElementById('addPeriodBtn');
     addPeriodBtn.addEventListener('click', addPeriod);
     
-    // Aggiungi il primo periodo automaticamente
-    addPeriod();
+    // Carica i dati salvati o aggiungi il primo periodo vuoto
+    loadPeriods();
 });
 
 // Aggiunge un nuovo periodo di lavoro
-function addPeriod() {
+function addPeriod(periodData = null) {
     periodCount++;
     const periodsContainer = document.getElementById('periodsContainer');
     
     // Calcola il numero del periodo basandosi sui periodi esistenti
     const existingPeriods = document.querySelectorAll('.period-item');
     const periodNumber = existingPeriods.length + 1;
+    
+    // Usa i dati forniti o valori di default
+    const description = periodData?.description || '';
+    const weeks = periodData?.weeks || '1';
+    const hours = periodData?.hours || '';
+    const isCollapsed = periodData?.collapsed !== undefined ? periodData.collapsed : (periodNumber > 1);
     
     const periodItem = document.createElement('div');
     periodItem.className = 'period-item';
@@ -43,18 +50,18 @@ function addPeriod() {
             <div class="period-fields">
                 <div class="field-group full-width">
                     <label for="description-${periodCount}">Descrizione (opzionale):</label>
-                    <input type="text" id="description-${periodCount}" placeholder="Es. Farm work a Mildura, Victoria" oninput="updatePeriodSummary(${periodCount})">
+                    <input type="text" id="description-${periodCount}" placeholder="Es. Farm work a Mildura, Victoria" value="${description}" oninput="updatePeriodSummary(${periodCount}); savePeriods()">
                 </div>
                 <div class="field-group">
                     <label for="weeks-${periodCount}">Numero di settimane nel payslip:</label>
-                    <select id="weeks-${periodCount}" onchange="calculateDays()">
-                        <option value="1">1 settimana</option>
-                        <option value="2">2 settimane</option>
+                    <select id="weeks-${periodCount}" onchange="calculateDays(); savePeriods()">
+                        <option value="1" ${weeks === '1' ? 'selected' : ''}>1 settimana</option>
+                        <option value="2" ${weeks === '2' ? 'selected' : ''}>2 settimane</option>
                     </select>
                 </div>
                 <div class="field-group">
                     <label for="hours-${periodCount}">Ore totali lavorate:</label>
-                    <input type="number" id="hours-${periodCount}" min="0" step="0.5" placeholder="Es. 35" oninput="calculateDays()">
+                    <input type="number" id="hours-${periodCount}" min="0" step="0.5" placeholder="Es. 35" value="${hours}" oninput="calculateDays(); savePeriods()">
                 </div>
             </div>
         </div>
@@ -62,20 +69,25 @@ function addPeriod() {
     
     periodsContainer.appendChild(periodItem);
     
-    // Inizializza come chiuso se non è il primo periodo
-    if (periodNumber > 1) {
-        const content = document.getElementById(`content-${periodCount}`);
-        const icon = document.getElementById(`toggle-icon-${periodCount}`);
-        if (content && icon) {
+    // Imposta lo stato collapsed/expanded
+    const content = document.getElementById(`content-${periodCount}`);
+    const icon = document.getElementById(`toggle-icon-${periodCount}`);
+    if (content && icon) {
+        if (isCollapsed) {
             content.style.display = 'none';
             icon.textContent = '▶';
             periodItem.classList.add('collapsed');
+        } else {
+            content.style.display = 'block';
+            icon.textContent = '▼';
+            periodItem.classList.remove('collapsed');
         }
     }
     
     // Aggiorna il summary iniziale
     updatePeriodSummary(periodCount);
     calculateDays();
+    savePeriods();
 }
 
 // Rimuove un periodo di lavoro
@@ -86,6 +98,7 @@ function removePeriod(periodId) {
         // Rinumera i periodi rimanenti
         renumberPeriods();
         calculateDays();
+        savePeriods();
     }
 }
 
@@ -201,6 +214,7 @@ function calculateDays() {
     
     // Aggiorna il risultato totale
     updateResult(totalDays);
+    savePeriods();
 }
 
 // Aggiorna il summary del periodo nell'header
@@ -249,6 +263,8 @@ function togglePeriod(periodId) {
             icon.textContent = '▼';
             periodItem.classList.remove('collapsed');
         }
+        
+        savePeriods();
     }
 }
 
@@ -279,5 +295,58 @@ function updateResult(totalDays) {
         resultMessage.textContent = 'Inserisci i tuoi periodi di lavoro per iniziare';
         resultMessage.className = 'result-message info';
     }
+}
+
+// Salva tutti i periodi nel localStorage
+function savePeriods() {
+    const periods = [];
+    const periodItems = document.querySelectorAll('.period-item');
+    
+    periodItems.forEach((periodItem) => {
+        const periodId = periodItem.id.split('-')[1];
+        const descriptionInput = document.getElementById(`description-${periodId}`);
+        const weeksSelect = document.getElementById(`weeks-${periodId}`);
+        const hoursInput = document.getElementById(`hours-${periodId}`);
+        const content = document.getElementById(`content-${periodId}`);
+        
+        if (descriptionInput && weeksSelect && hoursInput) {
+            periods.push({
+                description: descriptionInput.value || '',
+                weeks: weeksSelect.value || '1',
+                hours: hoursInput.value || '',
+                collapsed: content ? content.style.display === 'none' : false
+            });
+        }
+    });
+    
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(periods));
+    } catch (e) {
+        console.error('Errore nel salvataggio dei dati:', e);
+    }
+}
+
+// Carica i periodi dal localStorage
+function loadPeriods() {
+    try {
+        const savedData = localStorage.getItem(STORAGE_KEY);
+        
+        if (savedData) {
+            const periods = JSON.parse(savedData);
+            
+            if (periods && periods.length > 0) {
+                // Carica i periodi salvati
+                periods.forEach((periodData) => {
+                    addPeriod(periodData);
+                });
+                return;
+            }
+        }
+    } catch (e) {
+        console.error('Errore nel caricamento dei dati:', e);
+    }
+    
+    // Se non ci sono dati salvati, aggiungi un periodo vuoto
+    addPeriod();
 }
 
