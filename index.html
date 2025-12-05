@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OnlyFarms - Calcolatore 88 Giorni WHV 417</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 class="title">OnlyFarms</h1>
+            <p class="subtitle">
+                Questo strumento ti aiuta a contare con precisione i tuoi 88 giorni di lavoro regionale (specified work) necessari per richiedere il secondo anno di Working Holiday Visa 417. Inserisci tutte le date di inizio e fine dei tuoi periodi di farm/regional work e il calcolatore ti dirà esattamente quanti giorni validi hai accumulato.
+            </p>
+        </header>
+
+        <main>
+            <div class="calculator-container">
+                <div class="periods-container" id="periodsContainer">
+                    <!-- I periodi verranno aggiunti qui dinamicamente -->
+                </div>
+                
+                <button class="add-period-btn" id="addPeriodBtn">
+                    <span>+</span> Aggiungi Periodo
+                </button>
+
+                <div class="result-container" id="resultContainer">
+                    <div class="result-box" id="resultBox">
+                        <p class="result-label">Totale giorni completati:</p>
+                        <p class="result-value" id="resultValue">0</p>
+                        <p class="result-message" id="resultMessage">Inserisci i tuoi periodi di lavoro per iniziare</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p class="footer-note">💡 Ricorda di conservare payslips e referenze!</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
